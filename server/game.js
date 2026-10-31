@@ -1,12 +1,22 @@
 import Player from "./Player.js"
 
 export default class game {
-  constructor () {
+  constructor (io) {
+    this.io = io
     this.players = []
     this.lines = []
   }
 
-  actions(player, cmd, add) {
+  actions(id, cmd, add) {
+    let player;
+    for (const plr of this.players) {
+      if (plr.id == id) {
+        player = plr
+      }
+    }
+
+    if (!player) return
+    
     switch (cmd) {
       case "view-lines":
         let color = "#e35f5fb5"
@@ -42,16 +52,29 @@ export default class game {
           })
         }
 
+        this.io.emit("update", this.players, this.lines)
+
         // Check death
+        let playerToKill = null;
         for (const cell of this.lines) {
           for (const plr of this.players) {
-            if (plr != player) {
+            if (plr.id != player.id) {
               if (cell.x == plr.x && cell.y == plr.y) {
-                
-                console.log("Death")
+                playerToKill = plr.id;
+                break
               }
             }
           }
+          if (playerToKill) break;
+        }
+
+        if (playerToKill) {
+          console.log("Death - O inimigo foi caçado!")
+          
+          // Se quiser que a linha suma e o cara morra instantaneamente mas apareça o tiro:
+          setTimeout(() => {
+            this.removePlayer(playerToKill)
+          }, 250); // 150 milissegundos para o player ver o tiro pegando nele antes de sumir
         }
         
         break
@@ -71,9 +94,14 @@ export default class game {
   }
 
   removePlayer (id) {
-    for (const plr of this.players) {
-      if (plr.id != id) return
-      this.players.splice(this.players.indexOf(plr), 1)
+    for (let i = this.players.length - 1; i >= 0; i--) {
+      if (this.players[i].id === id) {
+        this.players.splice(i, 1)
+        break
+      }
     }
+        
+    this.lines = []
+    this.io.emit("update", this.players, this.lines)
   }
 }

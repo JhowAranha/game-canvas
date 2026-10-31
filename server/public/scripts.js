@@ -34,7 +34,7 @@ window.addEventListener("keydown", (e) => {
     if (e.key === "a" || e.key === "ArrowLeft") socket.emit("action", ["move", "left"])
     if (e.key === "d" || e.key === "ArrowRight") socket.emit("action", ["move", "right"])
     if (e.key === "s" || e.key === "ArrowDown") socket.emit("action", ["move", "down"])
-    if (e.key === " ") actions("view-lines", "")
+    if (e.key === " ") socket.emit("action", ["view-lines", ""])
     if (e.key === "F5") window.location.reload()
 }) 
 
@@ -52,7 +52,21 @@ function draw (players, lines) {
     }
 
     for (const player of players) {
-        ctx.fillStyle = player.color
-        ctx.fillRect(player.x, player.y, 1, 1)
+      if (player.id == socket.id) {
+        player.color = "blue"
+      } else {
+        player.color = "black"
+      }
+
+      ctx.fillStyle = player.color
+      ctx.fillRect(player.x, player.y, 1, 1)
     }
 }
+
+
+
+socket.on("update", (players, lines) => {
+  //console.log(players)
+  //console.log(lines)
+  draw(players, lines)
+})
