@@ -3,6 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
+import game from "./game.js"
 
 // Configuração do __dirname para ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+const Game = new game()
+
 // Dica bônus: usar o express.static para servir toda a pasta public de uma vez
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -20,7 +23,16 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+  
+
   console.log('a user connected', socket.id);
+
+  console.log(Game.addPlayer(socket.id, 1, 1))
+  io.emit("update", Game.players)
+
+  socket.on("update", (players) => {
+    console.log(players)
+  })
 
   socket.on('disconnect', () => {
     console.log('a user disconnected', socket.id);
